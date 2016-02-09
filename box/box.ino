@@ -6,7 +6,7 @@
 /*                                Lux                                */
 /*                                                                   */
 /*             Contacts:                                             */
-/*                      Alessio Cavone Aka Champion                  */
+/*                      Alessio Cavone Aka BrainDev                  */
 /*                         Ivan B  Aka KillerBM                      */
 /*                            Gepp Aka UserK                         */
 /*                                                                   */
@@ -129,9 +129,9 @@ double convertSec2millisTimerL(int a)
   return periodeTimerLoopMillis;
 }
 
-int convertMillis2Min(int a)
+int convertMillis2Min(float a)
 {
-  return a/1000;
+  return  a/1000;
 }
 
 double convertMin2Millis(double a)
@@ -154,6 +154,8 @@ void sensorRoutine()
   {
     writeSdToRoutine();
     Serial.println("[Sakura] CSV Data written to sd");
+    Serial.print("Millis: ");
+    Serial.println(millis());
   }
 }
 
@@ -170,7 +172,8 @@ void writeSdToRoutine()
   {
     // The following function must be called
     initLog();
-    int timeK = convertMillis2Min(millis());
+    
+    //int timeK = convertMillis2Min(millis());
     //Concat string to send
     messageToSdWrite = "H," + humT + "," + tempT + "," + luxT + "," + convertMillis2Min(millis()) + ",Z";
     
