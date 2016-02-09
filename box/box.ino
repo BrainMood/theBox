@@ -6,7 +6,7 @@
 /*                                Lux                                */
 /*                                                                   */
 /*             Contacts:                                             */
-/*                      Alessio Cavone Aka BrainDev                  */
+/*                      Alessio Aka BrainDev                  */
 /*                         Ivan B  Aka KillerBM                      */
 /*                            Gepp Aka UserK                         */
 /*                                                                   */
