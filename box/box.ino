@@ -64,16 +64,13 @@ String luxT;
 String humT;
 String timeT;
 String messageToSdWrite;
-String FILE2OPEN = "TEST.txt";
+String FILE2OPEN = "logBox.txt";
 
 // Timers Countera
 long timerLoop, timer0, timer1, timer2;
 int TLperiod = 5;
 long int periodeTimerLoopMillis = 0;
 long int SdTimerPeriod = 5000;
-
-int time;
-
 
 void setupDht()
 {
@@ -153,9 +150,6 @@ void sensorRoutine()
   if ( timerLoop % SdTimerPeriod == 0)
   {
     writeSdToRoutine();
-    Serial.println("[Sakura] CSV Data written to sd");
-    Serial.print("Millis: ");
-    Serial.println(millis());
   }
 }
 
@@ -163,6 +157,10 @@ void sensorRoutine()
 void updateTimer()
 {
   timerLoop = millis();
+  if (verbosityLevel >=8)
+  {
+    Serial.println("[Sakura] Timer updates");
+  }
 }
 
 // #SD #SDWRITE
@@ -172,10 +170,17 @@ void writeSdToRoutine()
   {
     // The following function must be called
     initLog();
+
+
+    if (verbosityLevel >=6)
+    {
+      Serial.print("[Sakura] writing to sd: ");
+      Serial.print("H," + humT + "," + tempT + "," + luxT + "," + timeT + ",Z");
+    }
     
     //int timeK = convertMillis2Min(millis());
     //Concat string to send
-    messageToSdWrite = "H," + humT + "," + tempT + "," + luxT + "," + convertMillis2Min(millis()) + ",Z";
+    messageToSdWrite = "H," + humT + "," + tempT + "," + luxT + "," + timeT + ",Z";
     
     sdWrite(messageToSdWrite);
   
@@ -189,7 +194,7 @@ void writeSdToRoutine()
 void readLux()
 {
   luxVal = analogRead(0);  
-  if (verbosityLevel > 3)
+  if (verbosityLevel >= 3)
      Serial.println("Ok LUx");
 }
 
@@ -198,7 +203,7 @@ void getTempHum()
 {
   humidity = dht.readHumidity();
   temperature = dht.readTemperature();  
-  if (verbosityLevel > 3)
+  if (verbosityLevel >= 3)
      Serial.println("Ok Temp");
 }
 
@@ -244,7 +249,7 @@ void sdWrite(String message)
 {
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  myFile = SD.open("test.txt", FILE_WRITE);
+  myFile = SD.open(FILE2OPEN, FILE_WRITE);
 
   // if the file opened okay, write to it:
   if (myFile) 
@@ -252,22 +257,22 @@ void sdWrite(String message)
     myFile.println(message);
     // close the file:
     myFile.close();
-    Serial.println("Wrote to file.");
+    Serial.println("[Sakura] Wrote to file.");
   } 
   else 
   {
     // if the file didn't open, print an error:
-    Serial.println("ERROR opening test.txt");
+    Serial.println("[Sakura] ERROR opening");
   }   
 }
 
 void readSdFile()
 {
   // re-open the file for reading:
-  myFile = SD.open("test.txt");
+  myFile = SD.open(FILE2OPEN);
   if (myFile) 
   {
-    Serial.println("[Content]:");
+    Serial.println("[Sakura] Content:");
 
     // read from the file until there's nothing else in it:
     while (myFile.available()) 
@@ -313,13 +318,13 @@ void SerialRoutine()
     else if (t == '+')
     {
       verbosityLevel++;
-      Serial.print("- Verbosity level changed :]");
+      Serial.println("- Verbosity level changed :]\n");
       Serial.print(verbosityLevel);
     }    
     else if (t == '-')
     {
       verbosityLevel--;
-      Serial.print("- Verbosity level changed :]");
+      Serial.println("- Verbosity level changed :]\n");
       Serial.print(verbosityLevel);
     }    
     else if (t == 'p')
@@ -357,7 +362,7 @@ void initLog()
 {
   tempT = dtostrf(temperature,5,2,temp);
   luxT = dtostrf(luxVal,5,2,lux);
-  timeT = dtostrf(millis(),5,2,timeK);
+  timeT = dtostrf(convertMillis2Min(millis()),5,2,timeK);
   humT = dtostrf(humidity,5,2,hum);
 }
 
