@@ -44,8 +44,8 @@
 DHT dht(DHTPIN, DHTTYPE);
 SoftwareSerial blu(10, 11); // RX, TX
 
-int luxVal;
-float temperature,humidity;
+int luxVal = 0;
+float temperature =0.0,humidity=0.0;
 boolean printCSV = false;
 boolean printSerial = false;
 boolean verbosity = false;
