@@ -32,18 +32,17 @@
 
 
 #include "DHT.h"
-#include <SPI.h>
-#include <SD.h>
-
-File myFile;
+#include "SoftwareSerial.h"
 
 // Update Current Version
-#define VERSION 1.16 
+#define VERSION 1.01
 
 #define DHTPIN 2     // what digital pin we're connected to
+#define LUX_PIN 1
 #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
 
 DHT dht(DHTPIN, DHTTYPE);
+SoftwareSerial blu(10, 11); // RX, TX
 
 int luxVal;
 float temperature,humidity;
@@ -51,9 +50,6 @@ boolean printCSV = false;
 boolean printSerial = false;
 boolean verbosity = false;
 int verbosityLevel = 2;
-boolean printSD = false;
-
-const int chipSelect = 10;
 
 // Strings Log
 char temp[13];
@@ -65,8 +61,6 @@ String tempT;
 String luxT;
 String humT;
 String timeT;
-String messageToSdWrite;
-String FILE2OPEN = "logBox.txt";
 
 // Timers Countera
 long timerLoop, timer0, timer1, timer2;
@@ -80,22 +74,6 @@ void setupDht()
   pinMode(0,INPUT);
 }
 
-void setupSD()
-{
-  Serial.print("Initializing SD card...");
-  pinMode(chipSelect, OUTPUT);
-  if (!SD.begin(4)) 
-  {
-    Serial.println("initialization failed!");
-    return;
-  }
-  Serial.println("[OK]");
-  while (!Serial) 
-  {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
-}
-
 void initTimer()
 {
   timerLoop = 0; 
@@ -107,16 +85,15 @@ void initTimer()
 void setup() 
 {
   Serial.begin(115200);
+  blu.begin(115200);
   setupDht();
-  setupSD();
 
-  // Yhis should be the last one
+  // This should be the last one
   initTimer();
 }
 
 void loop()
 {
-  // First
   updateTimer();
   sensorRoutine();
   SerialRoutine();
@@ -149,10 +126,6 @@ void sensorRoutine()
     printData();
   }
   
-  if ( timerLoop % SdTimerPeriod == 0)
-  {
-    writeSdToRoutine();
-  }
 }
 
 // Update timers
@@ -165,37 +138,10 @@ void updateTimer()
   }
 }
 
-// #SD #SDWRITE
-void writeSdToRoutine()
-{  
-  if (printSD)
-  {
-    // The following function must be called
-    initLog();
-
-
-    if (verbosityLevel >=6)
-    {
-      Serial.print("[Sakura] writing to sd: ");
-      Serial.print("H," + humT + "," + tempT + "," + luxT + "," + timeT + ",Z");
-    }
-    
-    //int timeK = convertMillis2Min(millis());
-    //Concat string to send
-    messageToSdWrite = "H," + humT + "," + tempT + "," + luxT + "," + timeT + ",Z";
-    
-    sdWrite(messageToSdWrite);
-  
-    // timerSec = micros()-secRoutine;
-    // lastTimeToRead = micros();
-    readSdFile();
-  }
-}
-
 // # LUX
 void readLux()
 {
-  luxVal = analogRead(0);  
+  luxVal = analogRead(LUX_PIN);  
   if (verbosityLevel >= 3)
      Serial.println("Ok LUx");
 }
@@ -233,6 +179,18 @@ void printNormal()
   Serial.print(temperature);
   Serial.print(" LUX:  ");
   Serial.println(luxVal);  
+
+
+  
+  blu.print("Humidity: ");
+  blu.print(humidity);
+  blu.print(" %\t");
+  blu.print("Temperature: ");
+  blu.print(temperature);
+  blu.print(" LUX:  ");
+  blu.println(luxVal);  
+
+  
 }
 
 void printCSVData()
@@ -245,52 +203,17 @@ void printCSVData()
   Serial.print(luxVal);
   Serial.print(",");
   Serial.println("Z");
-}
 
-void sdWrite(String message)
-{
-  // open the file. note that only one file can be open at a time,
-  // so you have to close this one before opening another.
-  myFile = SD.open(FILE2OPEN, FILE_WRITE);
 
-  // if the file opened okay, write to it:
-  if (myFile) 
-  {
-    myFile.println(message);
-    // close the file:
-    myFile.close();
-    Serial.println("[Sakura] Wrote to file.");
-  } 
-  else 
-  {
-    // if the file didn't open, print an error:
-    Serial.println("[Sakura] ERROR opening");
-  }   
-}
-
-void readSdFile()
-{
-  // re-open the file for reading:
-  myFile = SD.open(FILE2OPEN);
-  if (myFile) 
-  {
-    Serial.println("[Sakura] Content:");
-
-    // read from the file until there's nothing else in it:
-    while (myFile.available()) 
-    {
-      Serial.write(myFile.read());
-    }
-    // close the file:c
-    
-    myFile.close();
-    Serial.println();
-  } 
-  else 
-  {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
-  }
+  
+  blu.print("H,");
+  blu.print(humidity);
+  blu.print(",");
+  blu.print(temperature);
+  blu.print(",");
+  blu.print(luxVal);
+  blu.print(",");
+  blu.println("Z");
 }
 
 // #SERIAL
@@ -332,20 +255,14 @@ void SerialRoutine()
     else if (t == 'p')
     {
       verbosity = !verbosity;
-      if (verbosity)
+      if (verbosity) {
         Serial.println("- Verbosity = TRUE");
-      else
+        blu.println("- Verbosity = TRUE");
+      } else {
         Serial.println("- Verbosity = FALSE");
-    }      
-    else if (t == 's')
-    {
-      Serial.println("- Toggle SDCARD verbosity ... [OK]");
-      printSD = !printSD;
-      if (printSD)
-        Serial.println("- SD = TRUE");
-      else
-        Serial.println("- SD = FALSE");
-    }
+        blu.println("- Verbosity = FALSE");
+      }
+    } 
     else if (t == 'h')
     {
       Serial.println("Help:");
@@ -355,7 +272,19 @@ void SerialRoutine()
       Serial.println("c : toggle CSV mode");
       Serial.println("n : toggle Normal mode");
       Serial.println("s : toggle SD verbosity");
-      Serial.println("p : toggle general verbosity");      
+      Serial.println("p : toggle general verbosity");    
+
+      
+      blu.println("Help:");
+      
+      
+      blu.println("+/- : adjust verbosity level");
+      blu.println("c : toggle CSV mode");
+      blu.println("n : toggle Normal mode");
+      blu.println("s : toggle SD verbosity");
+      blu.println("p : toggle general verbosity");    
+
+     
     }        
   }
 } 
