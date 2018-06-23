@@ -6,24 +6,27 @@
 /*                                Lux                                */
 /*                                                                   */
 /*             Contacts:                                             */
-/*                      Alessio Aka BrainDev                  */
+/*                      Alessio Aka BrainDev                         */
 /*                         Ivan B  Aka KillerBM                      */
 /*                            Gepp Aka UserK                         */
 /*                                                                   */
-/*             PinOUT  SD CARD                                       */
-/*                        Vcc  - 3.3                                 */
-/*                     Miso/DO - 12                                  */
-/*                     Mosi/DI - 11                                  */
-/*                         SCK - 13                                  */
-/*                          CS - 4                                   */
 /*             PinOUT  DHT22                                         */
 /*                        Vcc  - 5 V                                 */
 /*                         DATA - 2                                  */
 /*                                                                   */
+/*             PinOUT  Blue                                          */
+/*                        RX   -  11                                 */
+/*                        TX   -  10                                 */
+/*                                                                   */
+/*             PinOUT  GAS                                           */
+/*                        A0   -  A0                                 */
+/*                                                                   */
+/*             PinOUT  LUX                                           */
+/*                       DATA  -  A1                                 */
+/*                                                                   */
+/*                                                                   */
 /*********************************************************************/
 
-
-/* TODO: check concat function and find none string values + SD Write */
 /*                                                                   */
 /*********************************************************************/
 
@@ -36,7 +39,6 @@ File myFile;
 
 // Update Current Version
 #define VERSION 1.16 
-
 
 #define DHTPIN 2     // what digital pin we're connected to
 #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
